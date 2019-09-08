@@ -2,10 +2,9 @@
 //  AppDelegate.swift
 //  ios-webrtc-test
 //
-//  Created by （有）ゼネラルソフトウェア on 2019/09/06.
-//
 
 import UIKit
+import WebRTC
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
