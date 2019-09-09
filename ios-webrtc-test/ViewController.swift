@@ -9,12 +9,7 @@ import WebRTC
 import Starscream
 import SwiftyJSON
 
-class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDelegate, RTCVideoViewDelegate {
-    
-    func videoView(_ videoView: RTCVideoRenderer, didChangeVideoSize size: CGSize) {
-        print(videoView, size)
-        print("capture running:", capture.captureSession.isRunning)
-    }
+class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDelegate {
     
     // RTCPeerConnection delegate func
     
@@ -53,12 +48,16 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
                 "uuid": uuid,
                 "sdp": sdp
             ])
-            while (true) {
-                if ws.isConnected {
-                    print("exec send")
-                    ws.write(string: json.rawString(String.Encoding.utf8, options: [])!)
-                    break;
-                }
+            DispatchQueue.main.async {
+                Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { (timer) in
+                    if self.ws.isConnected {
+                        print("exec send")
+                        self.ws.write(string: json.rawString(String.Encoding.utf8, options: [])!)
+                        timer.invalidate()
+                    } else {
+                        print("pending...")
+                    }
+                })
             }
         }
     }
@@ -122,10 +121,9 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
         RTCInitializeSSL()
         uuid = NSUUID().uuidString
         print("uuid:", uuid!)
-        locaVideoView.delegate = self
-        let videoEncoderFactory = RTCDefaultVideoEncoderFactory()
-        let videoDecoderFactory = RTCDefaultVideoDecoderFactory()
-        factory = RTCPeerConnectionFactory(encoderFactory: videoEncoderFactory, decoderFactory: videoDecoderFactory)
+        let encoderFactory = RTCDefaultVideoEncoderFactory()
+        let decoderFactory = RTCDefaultVideoDecoderFactory()
+        factory = RTCPeerConnectionFactory(encoderFactory: encoderFactory, decoderFactory: decoderFactory)
         let config = RTCConfiguration()
         config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
         //config.sdpSemantics = .unifiedPlan
@@ -150,8 +148,8 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
     
     func getFormat(tgtDevice: AVCaptureDevice) -> AVCaptureDevice.Format {
         let formats = RTCCameraVideoCapturer.supportedFormats(for: tgtDevice)
-        let targetWidth = Int32(800)
-        let targetHeight = Int32(600)
+        let targetWidth = Int32(320)
+        let targetHeight = Int32(240)
         var selectedFormat: AVCaptureDevice.Format?
         var currentDiff: Int32 = Int32.max
         for format in formats {
@@ -177,8 +175,6 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
         capture.startCapture(with: camera, format: format, fps: 30)
         self.localVideoTrack.add(locaVideoView)
         let streamId = "stream1"
-        //pc.add(videoTrack, streamIds: [streamId])
-        //pc.add(audioTrack, streamIds: [streamId])
         let stream = factory.mediaStream(withStreamId: streamId)
         stream.addAudioTrack(audioTrack)
         stream.addVideoTrack(videoTrack)
