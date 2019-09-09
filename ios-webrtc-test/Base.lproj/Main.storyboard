@@ -44,7 +44,7 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <connections>
-                        <outlet property="locaVideoView" destination="bvz-Bt-PU1" id="IAs-53-vNS"/>
+                        <outlet property="localVideoView" destination="bvz-Bt-PU1" id="IAs-53-vNS"/>
                         <outlet property="remoteVideoView" destination="48z-Hj-GXj" id="CIb-3L-Tai"/>
                     </connections>
                 </viewController>

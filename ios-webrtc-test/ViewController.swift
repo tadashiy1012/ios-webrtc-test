@@ -106,7 +106,7 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
     // main
     
     @IBOutlet weak var remoteVideoView: RTCEAGLVideoView!
-    @IBOutlet weak var locaVideoView: RTCEAGLVideoView!
+    @IBOutlet weak var localVideoView: RTCEAGLVideoView!
     
     var uuid: String! = nil
     var ws: WebSocket! = nil
@@ -173,7 +173,7 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
         let camera = getCamera()
         let format = getFormat(tgtDevice: camera)
         capture.startCapture(with: camera, format: format, fps: 30)
-        self.localVideoTrack.add(locaVideoView)
+        self.localVideoTrack.add(localVideoView)
         let streamId = "stream1"
         let stream = factory.mediaStream(withStreamId: streamId)
         stream.addAudioTrack(audioTrack)
