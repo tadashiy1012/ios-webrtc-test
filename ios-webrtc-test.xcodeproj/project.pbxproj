@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CF9DA307232A141B00B08B41 /* MyPeerConnectionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA306232A141B00B08B41 /* MyPeerConnectionDelegate.swift */; };
+		CF9DA309232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA308232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift */; };
+		CF9DA30B232A2EE700B08B41 /* MyDataChDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA30A232A2EE700B08B41 /* MyDataChDelegate.swift */; };
 		CFF6A2CA23223E5000605A1B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF6A2C923223E5000605A1B /* AppDelegate.swift */; };
 		CFF6A2CC23223E5000605A1B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF6A2CB23223E5000605A1B /* ViewController.swift */; };
 		CFF6A2CF23223E5000605A1B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CFF6A2CD23223E5000605A1B /* Main.storyboard */; };
@@ -19,6 +22,9 @@
 		3BD0EE4B475FD5F03FE619AF /* Pods-ios-webrtc-test.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-webrtc-test.debug.xcconfig"; path = "Target Support Files/Pods-ios-webrtc-test/Pods-ios-webrtc-test.debug.xcconfig"; sourceTree = "<group>"; };
 		699500A947627BDA131D5C90 /* Pods-ios-webrtc-test.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-webrtc-test.release.xcconfig"; path = "Target Support Files/Pods-ios-webrtc-test/Pods-ios-webrtc-test.release.xcconfig"; sourceTree = "<group>"; };
 		85C8C0DA5B763AECDC897908 /* Pods_ios_webrtc_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_webrtc_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF9DA306232A141B00B08B41 /* MyPeerConnectionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPeerConnectionDelegate.swift; sourceTree = "<group>"; };
+		CF9DA308232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDCPeerConnectionDelegate.swift; sourceTree = "<group>"; };
+		CF9DA30A232A2EE700B08B41 /* MyDataChDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDataChDelegate.swift; sourceTree = "<group>"; };
 		CFF6A2C623223E5000605A1B /* ios-webrtc-test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-webrtc-test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFF6A2C923223E5000605A1B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CFF6A2CB23223E5000605A1B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -84,6 +90,9 @@
 				CFF6A2D023223E5100605A1B /* Assets.xcassets */,
 				CFF6A2D223223E5100605A1B /* LaunchScreen.storyboard */,
 				CFF6A2D523223E5100605A1B /* Info.plist */,
+				CF9DA306232A141B00B08B41 /* MyPeerConnectionDelegate.swift */,
+				CF9DA308232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift */,
+				CF9DA30A232A2EE700B08B41 /* MyDataChDelegate.swift */,
 			);
 			path = "ios-webrtc-test";
 			sourceTree = "<group>";
@@ -204,6 +213,9 @@
 			files = (
 				CFF6A2CC23223E5000605A1B /* ViewController.swift in Sources */,
 				CFF6A2CA23223E5000605A1B /* AppDelegate.swift in Sources */,
+				CF9DA309232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift in Sources */,
+				CF9DA30B232A2EE700B08B41 /* MyDataChDelegate.swift in Sources */,
+				CF9DA307232A141B00B08B41 /* MyPeerConnectionDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

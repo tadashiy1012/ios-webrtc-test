@@ -9,71 +9,7 @@ import WebRTC
 import Starscream
 import SwiftyJSON
 
-class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDelegate {
-    
-    // RTCPeerConnection delegate func
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
-        print(">>signalingState changed", stateChanged.rawValue)
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
-        print(">>add stream")
-        remoteVideoTrack = stream.videoTracks[0]
-        remoteVideoTrack.add(remoteVideoView)
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {
-        print(">>remove stream")
-    }
-    
-    func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {
-        print(">>negotiation")
-        makeOffer()
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
-        print(">>ice connection state", newState.rawValue)
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
-        print(">>ice gathering state", newState.rawValue)
-        if newState == RTCIceGatheringState.complete {
-            print("ice gathering compl. send sdp")
-            let sdp = pc.localDescription?.sdp
-            let json = JSON([
-                "to": "default@890",
-                "type": "consume",
-                "key": "default",
-                "uuid": uuid,
-                "sdp": sdp
-            ])
-            DispatchQueue.main.async {
-                Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { (timer) in
-                    if self.ws.isConnected {
-                        print("exec send")
-                        self.ws.write(string: json.rawString(String.Encoding.utf8, options: [])!)
-                        timer.invalidate()
-                    } else {
-                        print("pending...")
-                    }
-                })
-            }
-        }
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
-        print(">>ice candidate generate")
-        pc.add(candidate)
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove candidates: [RTCIceCandidate]) {
-        print(">>ice candidate remove")
-        pc.remove(candidates)
-    }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {}
-    
+class ViewController: UIViewController, WebSocketDelegate {
     
     // websocket delegate func
     
@@ -98,6 +34,12 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
             pc.setRemoteDescription(answer) { (err) in
                 print(err ?? "set remote desc no error")
             }
+        } else if data["type"]?.rawString() == "produce_dc" {
+            print("bingo!!")
+            let answer = RTCSessionDescription(type: RTCSdpType.answer, sdp: (data["sdp"]?.rawString())!)
+            dcpc.setRemoteDescription(answer) { (err) in
+                print(err ?? "set dc remote desc no error")
+            }
         }
     }
     
@@ -112,15 +54,22 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
     var ws: WebSocket! = nil
     var factory: RTCPeerConnectionFactory! = nil
     var pc: RTCPeerConnection! = nil
+    var dcpc: RTCPeerConnection! = nil
     var remoteVideoTrack: RTCVideoTrack! = nil
     var localVideoTrack: RTCVideoTrack! = nil
     var capture: RTCCameraVideoCapturer! = nil
+    var pcDelegate: MyPeerConnectionDelegate? = nil
+    var dcpcDelegate: MyDCPeerConnectionDelegate? = nil
+    var dataChannel: RTCDataChannel? = nil
+    var dataChannelDelegate: MyDataChDelegate? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
         RTCInitializeSSL()
         uuid = NSUUID().uuidString
         print("uuid:", uuid!)
+        ws = WebSocket(url: URL(string: "wss://cloud.achex.ca")!)
+        ws.delegate = self
         let encoderFactory = RTCDefaultVideoEncoderFactory()
         let decoderFactory = RTCDefaultVideoDecoderFactory()
         factory = RTCPeerConnectionFactory(encoderFactory: encoderFactory, decoderFactory: decoderFactory)
@@ -130,10 +79,35 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
         config.bundlePolicy = .maxBundle
         config.rtcpMuxPolicy = .require
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
-        pc = factory.peerConnection(with: config, constraints: constraints, delegate: self)
+        pcDelegate = MyPeerConnectionDelegate()
+        pcDelegate?.onRemoteVideoHandler = { stream in
+            self.remoteVideoTrack = stream.videoTracks[0]
+            self.remoteVideoTrack.add(self.remoteVideoView)
+        }
+        pcDelegate?.onNegotiationHandler = {
+            self.makeOffer()
+        }
+        pcDelegate?.onIceGatheringComplHandler = {
+            self.sendSdp()
+        }
+        pc = factory.peerConnection(with: config, constraints: constraints, delegate: pcDelegate)
+        dcpcDelegate = MyDCPeerConnectionDelegate()
+        dcpcDelegate?.onNegotiationHandler = {
+            self.makeDcOffer()
+        }
+        dcpcDelegate?.onIceGatheringComplHandler = {
+            self.sendDcSdp()
+        }
+        dcpc = factory.peerConnection(with: config, constraints: constraints, delegate: dcpcDelegate)
+        let dcConfig = RTCDataChannelConfiguration()
+        dataChannel = dcpc.dataChannel(forLabel: "chat", configuration: dcConfig)
+        dataChannelDelegate = MyDataChDelegate()
+        dataChannelDelegate?.onReceiveMessageHandler = { buffer in
+            print(buffer.isBinary)
+            print(buffer.data)
+        }
+        dataChannel?.delegate = dataChannelDelegate
         startVideo()
-        ws = WebSocket(url: URL(string: "wss://cloud.achex.ca")!)
-        ws.delegate = self
         ws.connect()
     }
     
@@ -179,19 +153,77 @@ class ViewController: UIViewController, WebSocketDelegate, RTCPeerConnectionDele
         stream.addAudioTrack(audioTrack)
         stream.addVideoTrack(videoTrack)
         pc.add(stream)
+        print("local stream added!")
     }
     
     func makeOffer() {
-        pc.offer(for: RTCMediaConstraints(mandatoryConstraints: [
+        let constraints = RTCMediaConstraints(mandatoryConstraints: [
             kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue,
             kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueTrue
-        ], optionalConstraints: nil)) { (desc, err) in
-            print(err ?? "no error")
+        ], optionalConstraints: nil)
+        pc.offer(for: constraints) { (desc, err) in
+            print(err ?? "offer create no error")
             if let offer = desc {
                 self.pc.setLocalDescription(offer, completionHandler: { (err) in
-                    print(err ?? "no error")
+                    print(err ?? "offer set no error")
                 })
             }
+        }
+    }
+    
+    func makeDcOffer() {
+        let constraints = RTCMediaConstraints(mandatoryConstraints: [:], optionalConstraints: nil)
+        dcpc.offer(for: constraints) { (desc, err) in
+            print(err ?? "dc offer create no error")
+            if let offer = desc {
+                self.dcpc.setLocalDescription(offer, completionHandler: { (err) in
+                    print(err ?? "dc offer set no error")
+                })
+            }
+        }
+    }
+    
+    func sendSdp() {
+        let sdp = pc.localDescription?.sdp
+        let json = JSON([
+            "to": "default@890",
+            "type": "consume",
+            "key": "default",
+            "uuid": uuid,
+            "sdp": sdp
+            ])
+        DispatchQueue.main.async {
+            Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { (timer) in
+                if self.ws.isConnected {
+                    print("exec send")
+                    self.ws.write(string: json.rawString(String.Encoding.utf8, options: [])!)
+                    timer.invalidate()
+                } else {
+                    print("pending...")
+                }
+            })
+        }
+    }
+    
+    func sendDcSdp() {
+        let sdp = dcpc.localDescription?.sdp
+        let json = JSON([
+            "to": "default@890",
+            "type": "consume_dc",
+            "key": "default",
+            "uuid": uuid,
+            "sdp": sdp
+        ])
+        DispatchQueue.main.async {
+            Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { (timer) in
+                if self.ws.isConnected {
+                    print("exec send")
+                    self.ws.write(string: json.rawString(String.Encoding.utf8, options: [])!)
+                    timer.invalidate()
+                } else {
+                    print("pending...")
+                }
+            })
         }
     }
     
