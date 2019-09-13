@@ -10,6 +10,7 @@
 		CF9DA307232A141B00B08B41 /* MyPeerConnectionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA306232A141B00B08B41 /* MyPeerConnectionDelegate.swift */; };
 		CF9DA309232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA308232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift */; };
 		CF9DA30B232A2EE700B08B41 /* MyDataChDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA30A232A2EE700B08B41 /* MyDataChDelegate.swift */; };
+		CF9DA30D232B4CF500B08B41 /* Media.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF9DA30C232B4CF500B08B41 /* Media.swift */; };
 		CFF6A2CA23223E5000605A1B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF6A2C923223E5000605A1B /* AppDelegate.swift */; };
 		CFF6A2CC23223E5000605A1B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF6A2CB23223E5000605A1B /* ViewController.swift */; };
 		CFF6A2CF23223E5000605A1B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CFF6A2CD23223E5000605A1B /* Main.storyboard */; };
@@ -25,6 +26,7 @@
 		CF9DA306232A141B00B08B41 /* MyPeerConnectionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPeerConnectionDelegate.swift; sourceTree = "<group>"; };
 		CF9DA308232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDCPeerConnectionDelegate.swift; sourceTree = "<group>"; };
 		CF9DA30A232A2EE700B08B41 /* MyDataChDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDataChDelegate.swift; sourceTree = "<group>"; };
+		CF9DA30C232B4CF500B08B41 /* Media.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Media.swift; sourceTree = "<group>"; };
 		CFF6A2C623223E5000605A1B /* ios-webrtc-test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-webrtc-test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFF6A2C923223E5000605A1B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CFF6A2CB23223E5000605A1B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 				CF9DA306232A141B00B08B41 /* MyPeerConnectionDelegate.swift */,
 				CF9DA308232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift */,
 				CF9DA30A232A2EE700B08B41 /* MyDataChDelegate.swift */,
+				CF9DA30C232B4CF500B08B41 /* Media.swift */,
 			);
 			path = "ios-webrtc-test";
 			sourceTree = "<group>";
@@ -213,6 +216,7 @@
 			files = (
 				CFF6A2CC23223E5000605A1B /* ViewController.swift in Sources */,
 				CFF6A2CA23223E5000605A1B /* AppDelegate.swift in Sources */,
+				CF9DA30D232B4CF500B08B41 /* Media.swift in Sources */,
 				CF9DA309232A24DA00B08B41 /* MyDCPeerConnectionDelegate.swift in Sources */,
 				CF9DA30B232A2EE700B08B41 /* MyDataChDelegate.swift in Sources */,
 				CF9DA307232A141B00B08B41 /* MyPeerConnectionDelegate.swift in Sources */,

@@ -5,11 +5,46 @@
 
 import UIKit
 import AVFoundation
+import PDFKit
 import WebRTC
 import Starscream
 import SwiftyJSON
 
-class ViewController: UIViewController, WebSocketDelegate {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate, WebSocketDelegate {
+    
+    // UITextField delegate func
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textInput.resignFirstResponder()
+        return true
+    }
+    
+    
+    // UITableView delegate func
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print("tableData count:", tableData?.count ?? "no data")
+        return tableData?.count ?? 0
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let data = tableData?.reversed()[indexPath.row] ?? Media()
+        if data.text != nil {
+            let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell1", for: indexPath)
+            let label: UILabel = (cell.viewWithTag(101) as! UILabel)
+            label.text = data.text
+            return cell
+        } else if data.image != nil {
+            let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell2", for: indexPath)
+            let imageView: UIImageView = (cell.viewWithTag(201) as! UIImageView)
+            imageView.image = data.image
+            return cell
+        } else {
+            let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell1", for: indexPath)
+            return cell
+        }
+    }
+    
     
     // websocket delegate func
     
@@ -49,6 +84,8 @@ class ViewController: UIViewController, WebSocketDelegate {
     
     @IBOutlet weak var remoteVideoView: RTCEAGLVideoView!
     @IBOutlet weak var localVideoView: RTCEAGLVideoView!
+    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var textInput: UITextField!
     
     var uuid: String! = nil
     var ws: WebSocket! = nil
@@ -62,12 +99,20 @@ class ViewController: UIViewController, WebSocketDelegate {
     var dcpcDelegate: MyDCPeerConnectionDelegate? = nil
     var dataChannel: RTCDataChannel? = nil
     var dataChannelDelegate: MyDataChDelegate? = nil
+    var tableData: [Media]? = nil
+    var chunk: [Data]? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
         RTCInitializeSSL()
         uuid = NSUUID().uuidString
         print("uuid:", uuid!)
+        tableData = []
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.estimatedRowHeight = 40
+        tableView.rowHeight = UITableView.automaticDimension
+        textInput.delegate = self
         ws = WebSocket(url: URL(string: "wss://cloud.achex.ca")!)
         ws.delegate = self
         let encoderFactory = RTCDefaultVideoEncoderFactory()
@@ -103,12 +148,26 @@ class ViewController: UIViewController, WebSocketDelegate {
         dataChannel = dcpc.dataChannel(forLabel: "chat", configuration: dcConfig)
         dataChannelDelegate = MyDataChDelegate()
         dataChannelDelegate?.onReceiveMessageHandler = { buffer in
-            print(buffer.isBinary)
-            print(buffer.data)
+            self.procMessageData(buffer: buffer)
         }
         dataChannel?.delegate = dataChannelDelegate
         startVideo()
         ws.connect()
+    }
+    
+    @IBAction func onClickSendButton(_ sender: Any) {
+        textInput.endEditing(true)
+        let text = textInput.text ?? ""
+        if !text.isEmpty {
+            let json = JSON([
+                "id": uuid,
+                "type": "plane",
+                "message": text
+            ])
+            let data = json.rawString(String.Encoding.utf8, options: [])?.data(using: .utf8) ?? Data()
+            let buf = RTCDataBuffer(data: data, isBinary: false)
+            dataChannel?.sendData(buf)
+        }
     }
     
     func getCamera() -> AVCaptureDevice {
@@ -227,9 +286,58 @@ class ViewController: UIViewController, WebSocketDelegate {
         }
     }
     
+    func procMessageData(buffer: RTCDataBuffer) {
+        if buffer.isBinary {
+            if buffer.data[0] == UInt8(0) {
+                var typeData = Data()
+                var joined = Data()
+                var idx = 0;
+                chunk?.forEach({ (e) in
+                    if (idx == 0) {
+                        typeData.append(e[36...99].filter({ $0 != UInt8(0) }))
+                        joined.append(e[100...(e.count - 1)])
+                    } else {
+                        joined.append(e)
+                    }
+                    idx += 1
+                })
+                chunk = nil
+                let type = String(data: typeData, encoding: .utf8)!
+                print(type)
+                print(joined)
+                if type.hasPrefix("image") {
+                    let image = UIImage(data: joined)
+                    let media = Media()
+                    media.image = image
+                    tableData?.append(media)
+                }
+            } else {
+                if chunk == nil {
+                    chunk = []
+                }
+                chunk?.append(buffer.data)
+            }
+        } else {
+            if let str = String(data: buffer.data, encoding: .utf8) {
+                print(str)
+                let dic = JSON(parseJSON: str).dictionaryValue
+                if let message = dic["message"]?.rawString() {
+                    let media = Media()
+                    media.text = message
+                    tableData?.append(media)
+                }
+            }
+        }
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
+    }
+    
     deinit {
         capture.stopCapture()
         pc.close()
+        dataChannel?.close()
+        dcpc.close()
         factory = nil
         RTCCleanupSSL()
     }
