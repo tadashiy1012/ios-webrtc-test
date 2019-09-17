@@ -14,6 +14,8 @@ class MyPeerConnectionDelegate: NSObject, RTCPeerConnectionDelegate {
     var onNegotiationHandler: (() -> ())? = nil
     var onIceGatheringComplHandler: (() -> ())? = nil
     
+    var start: Date? = nil
+    
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
         print(">>signalingState changed", stateChanged.rawValue)
     }
@@ -38,7 +40,11 @@ class MyPeerConnectionDelegate: NSObject, RTCPeerConnectionDelegate {
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
         print(">>ice gathering state", newState.rawValue)
-        if newState == RTCIceGatheringState.complete {
+        if newState == RTCIceGatheringState.gathering {
+            start = Date()
+        } else if newState == RTCIceGatheringState.complete {
+            let elapsed = Date().timeIntervalSince(start ?? Date())
+            print("elapsed:" + elapsed.description)
             print("ice gathering compl. send sdp")
             self.onIceGatheringComplHandler?()
         }

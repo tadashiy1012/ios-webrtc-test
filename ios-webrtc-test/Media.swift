@@ -7,8 +7,10 @@
 
 import Foundation
 import UIKit
+import PDFKit
 
 class Media {
     var text: String? = nil
     var image: UIImage? = nil
+    var pdf: PDFDocument? = nil
 }

@@ -39,12 +39,37 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let imageView: UIImageView = (cell.viewWithTag(201) as! UIImageView)
             imageView.image = data.image
             return cell
+        } else if data.pdf != nil {
+            let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell2", for: indexPath)
+            let imageView: UIImageView = (cell.viewWithTag(201) as! UIImageView)
+            let cgdoc = data.pdf?.documentRef
+            let page = cgdoc?.page(at: 1)
+            let pageRect = page?.getBoxRect(.mediaBox)
+            let renderer = UIGraphicsImageRenderer(size: pageRect!.size)
+            let pageImage = renderer.image { (context) in
+                UIColor.white.set()
+                context.fill(pageRect!)
+                context.cgContext.translateBy(x: 0.0, y: (pageRect?.size.height)!)
+                context.cgContext.scaleBy(x: 1.0, y: -1.0)
+                context.cgContext.drawPDFPage(page!)
+            }
+            let pdfPage = PDFPage(image: pageImage)!
+            let size = CGSize(width: 600, height: pdfPage.bounds(for: .cropBox).height)
+            UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+            if let context = UIGraphicsGetCurrentContext() {
+                UIGraphicsPushContext(context)
+                pageImage.draw(at: CGPoint(x: 0, y: 0))
+                UIGraphicsPopContext()
+                if let newImage = UIGraphicsGetImageFromCurrentImageContext() {
+                    imageView.image = newImage
+                }
+            }
+            return cell
         } else {
             let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell1", for: indexPath)
             return cell
         }
     }
-    
     
     // websocket delegate func
     
@@ -110,8 +135,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableData = []
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.estimatedRowHeight = 40
-        tableView.rowHeight = UITableView.automaticDimension
         textInput.delegate = self
         ws = WebSocket(url: URL(string: "wss://cloud.achex.ca")!)
         ws.delegate = self
@@ -309,6 +332,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     let image = UIImage(data: joined)
                     let media = Media()
                     media.image = image
+                    tableData?.append(media)
+                } else if type.hasPrefix("application/pdf") {
+                    let doc = PDFDocument(data: joined)
+                    let media = Media()
+                    media.pdf = doc
                     tableData?.append(media)
                 }
             } else {
