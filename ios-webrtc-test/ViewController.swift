@@ -119,7 +119,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let decoderFactory = RTCDefaultVideoDecoderFactory()
         factory = RTCPeerConnectionFactory(encoderFactory: encoderFactory, decoderFactory: decoderFactory)
         let config = RTCConfiguration()
-        config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
+        config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.services.mozilla.com:3478"])]
         //config.sdpSemantics = .unifiedPlan
         config.bundlePolicy = .maxBundle
         config.rtcpMuxPolicy = .require
